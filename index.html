@@ -335,10 +335,65 @@ body {
   transform: translateY(-22px); /* ajusta vertical */
 }
 
+/* Container inicial — mesmo visual do final, mas posicionado no topo */
+.container.wide.start {
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 20px 0;
+}
 
+.container.wide.start .content {
+  max-width: 800px;
+  background: rgba(250, 245, 230, 0.95);
+  color: #4b3832;
+  text-align: center;
+  position: relative;
+  z-index: 11;
+  transform: translateY(22px); /* empurra um pouco pra ficar simétrico ao final */
+}
+
+/* opcional: maker visual pequeno para diferenciar início (remova se não quiser) */
+.container.wide.start .content h2 {
+  margin-bottom: 6px;
+}
   </style>
 </head>
 <body>
+<!-- Container inicial que marca o começo da linha do tempo -->
+<div class="container wide start" aria-label="Início da linha do tempo">
+  <div class="content">
+    <h2>Nossa Linha do Tempo</h2>
+
+    <!-- Miniaturas -->
+    <div class="gallery" style="margin-top:12px;">
+      <div class="img-wrapper" style="--rot: -2deg;">
+        <img src="https://i.imgur.com/3mb0TdL.jpeg" alt="Começo da nossa história">
+      </div>
+      <div class="img-wrapper" style="--rot: 2deg;">
+        <img src="https://i.imgur.com/qDrQRpF.jpeg" alt="Primeiros passos">
+      </div>
+    </div>
+    <!-- Texto completo -->
+<p>
+Aqui começa a nossa história... ✨  
+O primeiro passo de uma jornada que mudou a minha vida para sempre.  
+Tudo nasceu de um simples <b>match</b>, mas rapidamente se transformou em algo muito maior: em risos, em carinho, em parceria e em amor verdadeiro. 💖  
+</p>
+
+<p>
+Esta é a nossa <b>Linha do Tempo</b>, um presente que guarda cada momento especial, cada detalhe que fez o nosso caminho ser único.  
+De onde viemos até onde estamos, e de onde estamos até todos os lugares que ainda vamos chegar juntos. 🚀💕  
+</p>
+
+<p>
+Agora, quero te convidar a reviver comigo cada capítulo, a relembrar nossos primeiros passos e a se emocionar com tudo o que já construímos.  
+Porque esta não é apenas uma linha do tempo... é a prova viva de que o destino sabia exatamente o que fazia quando nos colocou um na vida do outro. 💫  
+</p>
+
+  </div>
+</div>
   <!-- Setembro 2024 -->
 <div class="timeline">
 <div class="container left">
@@ -956,8 +1011,3 @@ document.addEventListener('DOMContentLoaded', () => {
 </body>
 
 </html>
-
-
-
-
-
