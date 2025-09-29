@@ -960,10 +960,18 @@ document.addEventListener('DOMContentLoaded', () => {
     console.warn('btnYes não encontrado automaticamente — use window.onMatchHappened({name: "Nome"}) quando ocorrer o match.');
   }
 })();
+    // impede que qualquer toast de "match" apareça
+  function showMatchToast(name) {
+    // no-op: intencionalmente vazio
+    return;
+  }
+  // se algum outro script usar window.showMatchToast:
+  window.showMatchToast = showMatchToast;
 </script>
 
 
 </body>
 
 </html>
+
 
