@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Nossa Linha do Tempo</title>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Satisfy&display=swap" rel="stylesheet">
+  <style>
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Satisfy', cursive;
+  background: url('https://i.imgur.com/Pa5ytqi.jpeg') repeat; /* repete se precisar */
+  background-size: 100% 100%; /* cobre largura e altura exata da tela */
+  background-attachment: scroll; /* rola junto com a pÃ¡gina */
+  background-position: top left;
+  color: white;
+  overflow-x: hidden;
+}
+    .timeline {
+      position: relative;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 50px 0;
+    }
+
+    /* Linha central iluminada */
+    .timeline::after {
+      content: "";
+      position: absolute;
+      width: 6px;
+      background: linear-gradient(to bottom, #c28e0e, #e0b94b);
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      margin-left: -3px;
+      border-radius: 10px;
+    }
+
+    .container {
+      padding: 20px 40px;
+      position: relative;
+      width: 50%;
+      opacity: 0;
+      transform: translateY(50px);
+      transition: all 0.6s ease;
+    }
+    .container.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+/* DEBUG: forçar visibilidade enquanto depuramos JS */
+.container { opacity: 1 !important; transform: none !important; transition: none !important; }
+
+    .left { left: -1%; }
+    .right { left: 45.5%; }
+
+    .content {
+      background: rgba(250, 245, 230, 0.9); /* bege pergaminho translúcido */
+      padding: 20px;
+      max-width: 380px;  /* evita que fique muito largo e toque a linha */
+      border-radius: 12px;
+      position: relative;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      text-align: center;
+      color: #5c544a; /* cor padrão dos textos dentro do container */
+    }
+
+    .content img {
+      width: 100%;
+      max-width: 300px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.5);
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+
+    .content img:hover {
+      transform: scale(1.05);
+    }
+
+    .content h2 {
+      font-family: 'Great Vibes', cursive;
+      font-size: 2em;
+      margin: 10px 0;
+      color: #e0b94b;
+    }
+
+.content p {
+  font-size: 1.3em;
+  color: #5c544a;
+  text-align: justify;   /* alinha o texto nas duas margens */
+  word-wrap: break-word; /* evita que palavras grandes ultrapassem */
+}
+
+    /* Mini Ã­cones dentro do card */
+    .icon {
+      display: inline-block;
+      font-size: 1.2em;
+      margin: 0 3px;
+    }
+/* ------------------ INÃCIO: Bloco de galeria - substitua o bloco antigo ------------------ */
+
+.gallery {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 15px;
+  align-items: flex-start;
+  box-sizing: border-box;
+}
+
+/* tamanho FORÃ‡ADO e consistente das miniaturas para evitar variaÃ§Ãµes entre meses */
+.img-wrapper {
+  --rot: -3deg;                /* rotaÃ§Ã£o inicial (padrÃ£o) */
+  position: relative;
+  box-sizing: border-box;
+  flex: 0 0 150px;            /* garante o mesmo tamanho (150px) */
+  width: 150px;
+  height: 150px;
+  overflow: hidden;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+  cursor: pointer;
+  transform-origin: center center;
+  transition: transform 0.32s cubic-bezier(.2,.9,.2,1), box-shadow 0.32s ease;
+  transform: rotate(var(--rot)); /* aplica a rotaÃ§Ã£o inicial via variÃ¡vel */
+}
+
+/* definir rotaÃ§Ãµes individuais usando a variÃ¡vel --rot (NÃƒO usar transform aqui) */
+.gallery .img-wrapper:nth-child(1) { --rot: -2deg; }
+.gallery .img-wrapper:nth-child(2) { --rot: 3deg; }
+.gallery .img-wrapper:nth-child(3) { --rot: -4deg; }
+.gallery .img-wrapper:nth-child(4) { --rot: 2deg; }
+.gallery .img-wrapper:nth-child(5) { --rot: -3deg; }
+.gallery .img-wrapper:nth-child(6) { --rot: 4deg; }
+
+/* EFEITO: ao passar o mouse, a mini fica RETA (rotate 0) e levanta/escala */
+.img-wrapper:hover {
+  transform: rotate(0deg) translateY(-8px) scale(1.06);
+  z-index: 60;
+  box-shadow: 0 12px 28px rgba(0,0,0,0.55);
+}
+
+/* imagem interna: cobre o contÃªiner e dÃ¡ zoom no hover */
+.img-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.32s cubic-bezier(.2,.9,.2,1);
+  transform: none;
+}
+.img-wrapper:hover img {
+  transform: scale(1.08);
+}
+.img-wrapper video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;       /* mantém o recorte igual à imagem */
+  display: block;
+  transform-origin: center center;
+  transition: transform .25s ease, filter .2s ease;
+  user-select: none;
+  -webkit-user-drag: none;
+  background: #000;        /* evita flash enquanto carrega thumbnail */
+  filter: brightness(.95); /* leve ajuste visual para combinar com imagens */
+}
+
+/* hover da miniatura (se quiser) */
+.img-wrapper:hover video {
+  transform: scale(1.03);
+  filter: brightness(1);
+}
+/* --- Lightbox: vídeo ampliado --- */
+.lightbox-inner video {
+  max-width: 100%;
+  max-height: 80vh;        /* limita ao viewport */
+  width: auto;
+  height: auto;
+  display: block;
+  border-radius: 8px;
+  outline: none;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+}
+
+/* garante responsividade em telas pequenas */
+@media (max-width: 480px) {
+  .img-wrapper video { height: 120px; }
+  .lightbox-inner video { max-height: 70vh; }
+}
+
+/* tachinha (pin) - acompanha rotaÃ§Ã£o via variÃ¡vel e fica reta no hover */
+.img-wrapper::before {
+  content: "";
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  background: url('https://i.imgur.com/lsg3c37.png') no-repeat center;
+  background-size: contain;
+  top: 2px;
+  left: 50%;
+  transform: translateX(-50%) rotate(var(--rot));
+  z-index: 65;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.35));
+  transition: transform 0.32s ease, filter 0.32s ease;
+}
+.img-wrapper:hover::before {
+  transform: translateX(-50%) translateY(2px) rotate(0deg);
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.45));
+}
+
+/* responsividade: em telas menores as miniaturas encolhem em 2 por linha e depois 1 por linha */
+@media (max-width: 900px) {
+  .img-wrapper { flex: 0 0 calc(50% - 10px); width: calc(50% - 10px); height: calc(50% - 10px); }
+}
+@media (max-width: 480px) {
+  .img-wrapper { flex: 0 0 calc(100% - 10px); width: calc(100% - 10px); height: auto; aspect-ratio: 1/1; }
+}
+
+/* ------------------ FIM: Bloco de galeria ------------------ */
+
+  /* Lightbox - fundo escuro */
+.lightbox {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.9);
+  justify-content: center;
+  align-items: center;
+}
+
+.lightbox.active {
+  display: flex;
+}
+
+/* --- LIGHTBOX / VISUALIZAÃ‡ÃƒO AMPLIADA (ajustado) --- */
+.lightbox {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.9);
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.lightbox.active {
+  display: flex;
+}
+
+/* inner: agrupa imagem + legenda, centraliza e limita tamanho */
+.lightbox-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 90%;
+  max-height: 80%;
+  box-sizing: border-box;
+}
+
+/* imagem agora respeita o container .lightbox-inner */
+.lightbox-inner img {
+  max-width: 100%;
+  max-height: calc(80vh - 60px); /* deixa espaÃ§o para legenda */
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.6);
+  display: block;
+}
+
+/* legenda posicionada logo abaixo da imagem */
+.lightbox .caption {
+  margin-top: 12px;
+  color: #fff;
+  font-size: 1.05rem;
+  text-align: center;
+  max-width: 100%;
+  padding: 6px 12px;
+  background: rgba(0,0,0,0.35);
+  border-radius: 8px;
+  line-height: 1.3;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+  word-wrap: break-word;
+  z-index: 1010;
+}
+
+/* BotÃ£o fechar (mantido) */
+.lightbox .close {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  font-size: 40px;
+  color: white;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Setas (mantidas) */
+.lightbox .prev,
+.lightbox .next {
+  position: absolute;
+  top: 50%;
+  font-size: 50px;
+  color: white;
+  cursor: pointer;
+  user-select: none;
+  transform: translateY(-50%);
+}
+
+.lightbox .prev { left: 30px; }
+.lightbox .next { right: 30px; }
+
+/* Container final (Novembro 2025) */
+.container.wide.final {
+  position: relative;   /* garante que transform e left funcionem relativo ao container */
+  width: 100%;          /* ocupa toda a largura da timeline */
+  display: flex;        /* ativa flexbox */
+  justify-content: center; /* centraliza horizontalmente */
+  padding: 20px 0;
+}
+
+.container.wide.final .content {
+  max-width: 800px;           /* tamanho do bloco */
+  background: rgba(250, 245, 230, 0.95);
+  color: #4b3832;
+  text-align: center;         /* centraliza o texto */
+  position: relative;
+  z-index: 11;
+  transform: translateY(-22px); /* ajusta vertical */
+}
+
+
+  </style>
+</head>
+<body>
+  <!-- Setembro 2024 -->
+<div class="timeline">
+<div class="container left">
+  <div class="content">
+    <h2>Setembro de 2024</h2>
+
+    <!-- Miniaturas -->
+<div class="gallery">
+  <div class="img-wrapper">
+    <img src="https://i.imgur.com/qDrQRpF.jpeg" alt="Nossos planos 🥰">
+  </div>
+  <div class="img-wrapper">
+    <img src="https://i.imgur.com/wTJfTAu.jpeg" alt="Você sendo emocionado e eu adorando 😂">
+  </div>
+</div>
+    <!-- Texto completo -->
+    <p>Foi quando tudo começou. No Tinder demos match, eu te curti e você me curtiu... Até hoje não sabemos a data exata porque não gravamos, mas acredito que tenha sido em torno do dia 12/09, vamos considerar que foi nessa data 🤭</p>
+    <p>E aí, começamos a conversar sem parar. Foi quando descobrimos o quanto combinávos. Foi quando criamos uma conexão inexplicável. Passávamos horas em call assistindo <b>Bojack</b>. Você fazia questão de assistir comigo, era tão fofinho, pena que falava tão pouco no início <s> mal sabia eu que era só timidez</s>.</p>
+    <p>No mesmo mês eu perdi minha irmã, e você ficou do meu lado, não soltou a minha mão. Deus sabia que eu passaria por uma dor tão grande e precisaria de um pilar para me apoiar. E Ele enviou mais do que um pilar, ele me enviou um anjo que me colocou no colo e me segurou para eu não cair.</p>
+  </div>
+</div>
+
+  <!-- Outubro 2024 -->
+  <div class="container right">
+    <div class="content">
+      <h2>Outubro de 2024</h2>
+<div class="gallery">
+  <div class="img-wrapper">
+    <img src="https://i.imgur.com/AM2RmVM.jpeg" alt="19 de Outubro de 2024, Alameda Guedeville, 32, Ondina">
+  </div>
+ <div class="img-wrapper">
+    <img src="https://i.imgur.com/0ePEtLc.jpeg" alt="Esse lugar guarda tantas lembranças...">
+  </div>
+ <div class="img-wrapper">
+    <img src="https://i.imgur.com/pooXFIw.jpeg" alt="Um dos dias mais felizes da minha vida, o dia em que tudo aconteceu, o dia em que nossos olhares se encontraram.">
+  </div>
+ <div class="img-wrapper">
+    <img src="https://i.imgur.com/wNPLeZ7.jpeg" alt="A primeira de muitas vezes em que eu compartilhei a localização com você.">
+  </div>
+ <div class="img-wrapper">
+    <img src="https://i.imgur.com/MCbTNZO.jpeg" alt="E eu estava mais do que preparada. Só não sabia que seria tão diferente de tudo o que já senti na vida.">
+  </div>
+ <div class="img-wrapper">
+    <img src="https://i.imgur.com/R2UH4ak.jpeg" alt="Entre às 17:59 e às 18:00 eu achei que tinha levado um bolo 😂">
+  </div>
+ <div class="img-wrapper">
+    <img src="https://i.imgur.com/uPXjAEO.jpeg" alt="Eu nunca me esqueci da primeira despedida, eu sabia que depois dali haveriam algumas outras, e isso me entristecia, mas você não me deixou desistir. E realmente na próxima eu chorei junto com você. No dia 20 de outubro de 2024, eu estava me despedindo pela primeira vez da minha outra metade.">
+  </div>
+    <!-- Texto completo -->
+    <p>Nossa conexão só foi crescendo. Nesse mesmo mês eu dei uma de louca e sumi de todas as redes sociais, quando voltei, tinha certeza que você não estaria mais lá, mas eu estava errada. Você ainda estava lá. E, finalmente, marcamos o primeiro encontro.</p>
+    <p>A partir desse dia eu criei uma tabelinha de encontros, a data de ida e volta <s>tem alguma utilidade? não</s>, mesmo assim eu fazia, eu contava os dias e as horas pra te ver, e nós dois finalmente iríamos nos conhecer pessoalmente. É loucura viajar mais de 100km para ver alguém que acabou de conhecer? Sim. Fui julgada e atiraram mil pedras em mim porque era um risco enorme, eu poderia não voltar para casa <s>não julgo</s>, entre mil e uma coisas que poderia ter acontecido porque eu decidi arriscar.</p>
+    <p>E foi a melhor coisa que eu fiz na minha vida. Quando te vi pela primeira vez, o meu coração acelerou, não só por ver que era a mesma pessoa das fotos, mas porque o seu sorriso me fez ter certeza que fiz a coisa certa. Fomos para Ondina, onde eu nunca tinha ido, pensávamos nós que seria mais perto dos lugares para sair, mal sabíamos que nem sairíamos do quarto... E eu não queria sair mesmo, queria aproveitar cada segundo.</p>
+  </div>
+</div>
+</div>
+
+  <!-- Novembro 2024 -->
+  <div class="container left">
+    <div class="content">
+      <h2>Novembro de 2024</h2>
+<div class="gallery">
+  <div class="img-wrapper">
+    <img src="https://i.imgur.com/WIVgULF.jpeg" alt="Esse dia foi maravilhoso 💖">
+  </div>
+ <div class="img-wrapper">
+    <img src="https://i.imgur.com/mZviCZW.jpeg" alt="Palco de um dos melhores dias da minha vida, esse lugar é incrível 💖">
+  </div>
+ <div class="img-wrapper">
+    <img src="https://i.imgur.com/NUp1PvC.jpeg" alt="Um dia muito especial. O dia que eu me senti muito amada 💖">
+  </div>
+ <div class="img-wrapper">
+    <img src="https://i.imgur.com/dc1HgQx.jpeg" alt="Eu estava horrorosa, mas você estava ali embelezando a foto (e finalmente saiu a foto que deveria ter rolado no primeiro encontro).">
+  </div>
+<div class="img-wrapper">
+  <!-- video com muted e playsinline para não reproduzir automaticamente/sem som -->
+  <video src="https://i.imgur.com/Qv6AMT0.mp4" muted playsinline preload="metadata"></video>
+  <p class="caption">Achei tão lindinho 💖</p>
+</div>
+    <!-- Texto completo -->
+    <p>Novembro foi um mês lindo, um mês muito especial. Muitas coisas boas aconteceram, uma atrás da outra. Eu não posso começar esse mês sem citar a melhor forma que você escolheu de me pedir em namoro, só eu e você, sem mais ninguém, e ainda com vista para o mar. </p>
+    <p>No dia 02 de Novembro de 2024, no Terraço Bem te Vi, um lugar maravilhoso, foi o palco para um dos melhores dias da minha vida. Foi um momento super especial. Eu super apoio que a gente volte nesses lugares um dia, para relembrar como tudo começou. No dia 03 de Novembro, a segunda despedida. E nessa, uma surpresa. Surgiu o primeiro "Eu te amo". Chegou de forma tímida, você falou baixinho, pensei até ter escutado errado, e ainda fui te perguntar depois para ter certeza... Nunca pensei que fosse ouvir tão cedo 😂 mas foi tão fofo e especial, a gente ali na rodoviária se despedindo, e você soltar um <b>"te amo muito"</b>. Eu realmente me senti amada. </p>
+    <p> Foi o mês também em que apresentou seu projeto e deu tudo certo, eu tinha conseguido achar alguém para olhar Tom, e a bolsa dele na escola foi aprovada, então acabamos ganhando ainda mais motivos para comemorar. Nesse mesmo mês eu conheci seus pais, e pude entender de onde veio tanto carisma e bondade. O nosso dia/mês foi muito especial, e vou cuidar para que os próximos sejam ainda melhores. Sou muito sortuda por ter te conhecido. 💖</p>
+  </div>
+</div>
+</div>
+
+  <!-- Dezembro 2024 -->
+  <div class="container right">
+    <div class="content">
+      <h2>Dezembro de 2024</h2>
+<div class="gallery">
+  <div class="img-wrapper">
+    <img src="https://i.imgur.com/lRL7PSc.jpeg" alt="A fatídica foto que tiramos e usamos no perfil até hoje 🥰">
+  </div>
+ <div class="img-wrapper">
+    <img src="https://i.imgur.com/fDBYUwl.jpeg" alt="Somos muito lindos juntos, namoral 🤭">
+  </div>
+ <div class="img-wrapper">
+    <img src="https://i.imgur.com/khpNS9X.jpeg" alt="💖">
+  </div>
+
+    <!-- Texto completo -->
+    <p>O mês que eu mais gosto chegou <b>juntamente com o mês de Junho</b>, e o que acontece nesse mês? A tão esperada visita na casa dos teus sogros. 😅</p>
+    <p>O nervorsismo dos dois, a incerteza, meu pai te perguntando coisas que eu já tinha falado a ele... Enfim, mas no final deu tudo certo. Depois vieram o Natal e o Ano Novo, e eu não acredito que a gente não tirou uma foto no Natal, procurei e não achei uma 😂 </p>
+    <p> Mas foi muito especial, eu me senti acolhida pela sua família, todo mundo sempre me tratou como se eu fizesse parte da família, sempre me incluiam nas coisas, eu nunca me senti tão especial assim, eu sempre me achei irrelevante, e a sua família me acolheu/acolhe tão bem que eu me sinto parte da família até hoje. Finalmente no Ano Novo tiramos fotos, lembramos dessa vez pelo menos 😂 e foi maravilhoso poder passar o Natal e o Ano Novo com você meu amor.</p>
+  </div>
+</div>
+</div>
+
+  <!-- Janeiro 2025 -->
+  <div class="container left">
+    <div class="content">
+      <h2>Janeiro de 2025</h2>
+<div class="gallery">
+  <div class="img-wrapper">
+    <img src="https://i.imgur.com/y2DQdP9.jpeg" alt="O melhor momento do meu dia 💖">
+  </div>
+
+    <!-- Texto completo -->
+    <p>Os encontros ficaram mais desafiadores. A gente só conseguia ficar junto por 1 dia e meio, isso porque decidimos testar que eu fosse embora sempre na segunda-feira de manhã, daí eu precisava pegar o ônibus às 5h da manhã só para ter mais algumas horas ao seu lado.</p>
+    <p>As despedidas ficaram cada vez mais difíceis, fora que era super cansativo, porque acordávamos 4 da manhã pra poder sair e ir pra rodoviária, depois ainda trabalhar o dia todo... Mas eu não faria diferente. Se eu tivesse que passar por tudo isso novamente, eu passaria. Se tivesse que enfrentar tudo o que enfrentei, só para poder ficar algumas horas a mais ao seu lado, eu enfrentaria.</p>
+    <p>Era doloroso, mas sempre valeu a pena. E você sempre se esforçava para que tivéssemos várias coisinhas pra fazer juntos, as calls no Discord, a lista de filmes que fizemos pra assistir juntos, os joguinhos que dava pra jogarmos juntos, enfim... Tudo para que sempre tivéssemos alguma coisa pra fazer. E a sensação de chegar em casa depois de um dia inteiro de trabalho, e ter você ali para perguntar "Já chegou?", "Já comeu?", "Vamos call?", isso sim é maravilhoso.</p>
+  </div>
+</div>
+</div>
+
+  <!-- Fevereiro 2025 -->
+  <div class="container right">
+    <div class="content">
+      <h2>Fevereiro de 2025</h2>
+<div class="gallery">
+  <div class="img-wrapper">
+    <img src="https://i.imgur.com/MFtxW0s.jpeg" alt="As despedidas antes de dormir não podiam faltar.">
+  </div>
+
+    <!-- Texto completo -->
+    <p>O mês de fevereiro chegava, e os encontros ficavam cada vez mais difíceis. Não tinha mais quem olhasse Tom, eu tinha que ir pra aí todas as vezes, e isso estava ficando muito pesado... </p>
+    <p> Cada viagem, mais de R$200,00... Tive que começar a levar Tom em todas as vezes, e, mesmo assim, continuávamos firmes, mesmo com a distância.  </p>
+  </div>
+</div>
+</div>
+
+  <!-- Março 2025 -->
+  <div class="container left">
+    <div class="content">
+      <h2>Março de 2025</h2>
+<div class="gallery">
+  <div class="img-wrapper">
+    <img src="https://i.imgur.com/zo3yoqT.jpeg" alt="Seu bolinho 🥰">
+  </div>
+ <div class="img-wrapper">
+    <img src="https://i.imgur.com/4Qqga0A.jpeg" alt="Você comendo o seu bolinho 🥰">
+  </div>
+ <div class="img-wrapper">
+    <img src="https://i.imgur.com/q1Fibdw.png" alt="Um dos seus presentes, eu me dediquei tanto e saiu perfeito, você merece muito 💖">
+  </div>
+ <div class="img-wrapper">
+    <img src="https://i.imgur.com/xdyCnff.png" alt="A cereja do bolo 🥰">
+  </div>
+
+    <!-- Texto completo -->
+    <p>O mês do seu aniversário. Um mês mais do que especial. Eu planejei o seu presente de aniversário, e foi uma das coisas mais legais que fiz na vida, e eu te explico o porquê. Primeiro porque, pela primeira vez, eu estava me dedicando inteiramente para um aniversário, e nem era o meu 😅 </p>
+    <p> Segundo porque você é uma pessoa incrível, eu não poderia deixar passar em branco. Preparei tudo com muito carinho, uma pena que não pude estar contigo no dia, mas fiz questão de estar contigo assim que pude. </p>
+    <p>Nesse mês também passamos o carnaval juntos <s>primeira vez que ficamos "tantos" dias juntos</s>, mais de 1 dia e meio, e eu me acostumei a estar do seu lado, eu queria mais do que tudo acabar com a distância.</p>
+  </div>
+</div>
+</div>
+
+  <!-- Abril 2025 -->
+  <div class="container right">
+    <div class="content">
+      <h2>Abril de 2025</h2>
+<div class="gallery">
+  <div class="img-wrapper">
+    <img src="https://i.imgur.com/I7MxniC.jpeg" alt="O começo de um sonho">
+  </div>
+  <div class="img-wrapper">
+    <img src="https://i.imgur.com/hQQ0ufa.jpeg" alt="Nosso sonho cada vez mais perto">
+  </div>
+  <div class="img-wrapper">
+    <img src="https://i.imgur.com/zNvBSes.jpeg" alt="Contávamos quantos finais de semanas faltavam para o último final de semana separados">
+  </div>
+  <div class="img-wrapper">
+    <img src="https://i.imgur.com/IFWJpDQ.jpeg" alt="E os finais de semana viraram apenas alguns dias">
+  </div>
+
+    <!-- Texto completo -->
+    <p>Foi o mês em que começamos a dar mais um passo, tomamos uma das decisões mais importantes: <b>vamos morar juntos</b>. </p>
+    <p>Planejamos a mudança para Alagoinhas. Se bem que antes disso você já havia começado a planejar, mas eu só foquei depois do seu aniversário. E foi um misto de sentimentos. Alegria, nervorsismo, ansiedade, preocupação, tudo isso estava entrelaçado, e o sentimento de finalmente poder acabar com a distância, dar um fim a longos períodos sem se ver. </p>
+    <p>Procuramos, encontramos, e decidimos. Finalmente decidimos um lugar para "juntar as escovas", agora só precisávamos de uma data para encerrarmos a distância. No dia 22 de Abril de 2025, nos despedimos pela última vez. </p>
+    <p>A última vez que eu precisaria entrar no ônibus para longe de você, a última vez em que te dei um abraço de despedida com um aperto no peito por estar indo embora. E aí, começou o nosso sonho, depois de 16 encontros e despedidas.</p>
+  </div>
+</div>
+</div>
+
+  <!-- Maio 2025 -->
+  <div class="container left">
+    <div class="content">
+      <h2>Maio de 2025</h2>
+<div class="gallery">
+  <div class="img-wrapper">
+    <img src="https://i.imgur.com/8I9ujt2.jpeg" alt="1 diazinho pro início das nossas vidas juntos">
+  </div>
+ <div class="img-wrapper">
+    <img src="https://i.imgur.com/XGumb3B.jpeg" alt="Deu tudo certo 💖">
+  </div>
+
+    <!-- Texto completo -->
+    <p>Finalmente, acabou a distância! Contamos as semanas, os dias, as horas, os minutos e os segundos para esse dia <b>literalmente</b>. No dia 3, nós finalmente nos mudamos.</p>
+    <p>E finalmente poderíamos começar a nossa vida juntos, como eu sempre quis. A felicidade de finalmente acordar e dormir ao seu lado é indescritível. Eu não faria nada de diferente. Tivemos dores de cabeça, muitos gastos, preocupações, enfrentamos muita chuva no dia da mudança, mas deu tudo certo, aconteceu tudo como tinha que acontecer... E tudo isso com menos de um ano desde o primeiro contato. É loucura... Mas a melhor loucura de nossas vidas.</p>
+    <p>Começamos a viver juntos, compartilhar a vida juntos, não preciso mais avisar quando chego em casa porque você está lá me esperando, nunca mais precisei me preocupar em ter alguém do meu lado, me apoiando, me ajudando, sendo o meu alicerce. Agora não preciso mais apenas te ligar e ouvir a sua voz de longe, posso ir para casa e você estará lá a minha espera.</p>
+    <p>Sou muito grata a Deus pelo que conseguimos juntos, sou grata a você por não me deixar desistir nunca, e sempre me fazendo enxergar que todo esse esforço valeria a pena. Tenho muita sorte de te conhecer e de poder viver isso com você.</p>
+  </div>
+</div>
+</div>
+
+  <!-- Junho 2025 -->
+  <div class="container right">
+    <div class="content">
+      <h2>Junho de 2025</h2>
+<div class="gallery">
+  <div class="img-wrapper">
+    <img src="https://i.imgur.com/WLnc8Bi.jpeg" alt="Foi tudo maravilhoso, eu não teria conseguido sem você">
+  </div>
+
+    <!-- Texto completo -->
+    <p>Mês do aniversário de Tom, mês do São João (mais uma data festiva juntos, e dessa vez morando juntos), eu não preciso nem dizer o quão tudo foi especial.</p>
+    <p>Você me ajudou em tudo o que diz respeito a isso, eu não me senti sozinha em nenhum momento. Foi especial ter você ao meu lado como parceiro em tudo.</p>
+  </div>
+</div>
+</div>
+
+  <!-- Julho 2025 -->
+  <div class="container left">
+    <div class="content">
+      <h2>Julho de 2025</h2>
+    <!-- Texto completo -->
+    <p>Pela primeira vez na vida, meu aniversário foi comemorado. Você fez uma surpresa pra mim, <s>a gente precisa parar com essa mania de não tirar fotos.</s> </p>
+    <p>E foi a primeira vez que eu comemorei o meu aniversário. Eu me senti muito especial e amada, você me fez ver sentido em comemorar essa data.</p>
+    <p>A nossa vida a dois já estava cheia de rotina e carinho. Entre trabalho, casa e amor, aprendemos a dividir tudo.</p>
+  </div>
+</div>
+
+  <!-- Agosto 2025 -->
+  <div class="container right">
+    <div class="content">
+      <h2>Agosto de 2025</h2>
+    <!-- Texto completo -->
+    <p>Cada dia juntos é um aprendizado. Entre risadas, cafés e planos, a gente só cresceu. Aprendemos muito um com o outro, acertamos, erramos, mas nunca deixamos a nossa essência.</p>
+  </div>
+</div>
+
+  <!-- Setembro 2025 -->
+  <div class="container left">
+    <div class="content">
+      <h2>Setembro de 2025</h2>
+    <!-- Texto completo -->
+    <p>Completamos um ano desde o nosso match no Tinder. Um ano desde que tudo começou, um ano que eu entrei naquele aplicativo procurando por uma conexão e achei algo ainda melhor: um amor para a vida. Obrigada por ser meu amor, meu melhor amigo e meu porto seguro. 💕</p>
+  </div>
+</div>
+
+  <!-- Outubro 2025 -->
+  <div class="container right">
+    <div class="content">
+      <h2>Outubro de 2025</h2>
+    <!-- Texto completo -->
+    <p>Tudo o que a gente sonhou, tudo o que a gente almejou, estamos vivendo agora. Não podemos esquecer nunca que tudo isso que a gente vive é tudo o que a gente sonhou um dia, é tudo o que eu mais queria e almejava desde o início, a distância nunca foi o meu forte. 😅</p>
+  </div>
+</div>
+</div>
+<!-- Novembro 2025 - container final -->
+<div class="container wide final">
+  <div class="content">
+    <h2>Novembro de 2025</h2>
+<div class="gallery">
+  <div class="img-wrapper">
+    <img src="https://i.imgur.com/3mb0TdL.jpeg" alt="💕">
+  </div>
+  <div class="img-wrapper">
+    <img src="https://i.imgur.com/0J9G5vv.jpeg" alt="💕">
+  </div>
+  <div class="img-wrapper">
+    <img src="https://i.imgur.com/28OiiL2.jpeg" alt="💕">
+  </div>
+    <!-- Texto completo -->
+<p>Nosso <b>primeiro aniversário de namoro</b> 💍 é um marco inesquecível, um momento que quero guardar para sempre no coração. Este presente é apenas o primeiro de muitos que ainda vamos celebrar juntos, cada um mais especial que o outro.</p>
+
+<p>Sou profundamente grata por ter você na minha vida — por cada sorriso, cada abraço, cada palavra de conforto. Por ser meu amigo, meu porto seguro, minha inspiração diária. Sou grata por tudo o que você faz, por cada gesto de amor e cuidado, e por cada instante que passamos juntos. Você transforma os meus dias e colore minha vida de felicidade.</p>
+
+<p>Você é mais do que eu poderia sonhar. Mais do que eu ousaria imaginar. Nós enfrentamos a distância, as dificuldades, as diferenças, e ainda assim permanecemos juntos, mais fortes e mais conectados a cada desafio superado. Cada momento que passamos me faz perceber que você é a pessoa com quem eu sempre quis compartilhar minha vida.</p>
+
+<p>Você merece todo carinho, todo amor, todo cuidado que tenho para dar. Você me faz sentir completa, feliz, amada de uma forma que eu nunca imaginei ser possível. Cada gesto seu é um lembrete de que encontrei alguém verdadeiramente especial, alguém que faz o meu coração sorrir.</p>
+
+<p>Eu te amo com cada pedacinho do meu ser. Sou grata por cada segundo que compartilhamos, e se eu pudesse voltar no tempo, escolheria você novamente, e de novo, e de novo, porque meu coração sempre saberia que é você a pessoa certa para mim.</p>
+
+  </div>
+</div>
+
+<!-- Lightbox (estrutura atualizada para legenda logo abaixo da imagem) -->
+<div class="lightbox" id="lightbox" aria-hidden="true">
+  <span class="close" role="button" aria-label="Fechar">&times;</span>
+  <span class="prev" role="button" aria-label="Anterior">&#10094;</span>
+
+<div class="lightbox-inner" role="dialog" aria-modal="true">
+  <!-- aqui o JS insere dinamicamente img ou video -->
+  <p class="caption" id="lightboxCaption"></p>
+</div>
+
+  <span class="next" role="button" aria-label="PrÃ³xima">&#10095;</span>
+</div>
+<!-- Música de fundo 1 -->
+<audio id="bgMusic1">
+  <source src="https://www.dropbox.com/scl/fi/0fgp3a2mujxtlatsydzeg/SpotiDownloader.com-Belong-Together-Mark-Ambor.mp3?rlkey=pvv4b2wlkhyvy9phu0ha2hswt&raw=1" type="audio/mpeg">
+</audio>
+
+<!-- Música de fundo 2 -->
+<audio id="bgMusic2">
+  <source src="https://www.dropbox.com/scl/fi/q2rek4rf07u3gbvsqpmac/WhatsApp-Audio-2025-09-18-at-12.31.54.mpeg?rlkey=xzlk9o7gzvsf67tgb2az2aax3&raw=1" type="audio/mpeg">
+</audio>
+
+<!-- Música de fundo 3 -->
+<audio id="bgMusic3">
+  <source src="https://www.dropbox.com/scl/fi/d94ptndqvs2g0yro4fnnb/WhatsApp-Audio-2025-09-27-at-12.28.19.mpeg?rlkey=gwpn9e7shvl5rltw30709w41e&raw=1" type="audio/mpeg">
+</audio>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // garante visibilidade inicial por fallback (se algo falhar depois)
+  try {
+    const allContainers = document.querySelectorAll('.container');
+    allContainers.forEach((c, i) => setTimeout(() => c.classList.add('show'), 120 * i));
+  } catch (err) {
+    console.error('Erro ao aplicar .show nas containers:', err);
+    // fallback manual
+    document.querySelectorAll('.container').forEach(c => {
+      c.style.opacity = '1';
+      c.style.transform = 'none';
+    });
+  }
+
+  // inicia a lógica do lightbox de forma tolerante a erros (não retorna)
+  (function initLightbox() {
+    try {
+      const wrappers = Array.from(document.querySelectorAll('.img-wrapper'));
+      const lightbox = document.getElementById('lightbox');
+      const inner = lightbox ? lightbox.querySelector('.lightbox-inner') : null;
+      let captionEl = inner ? inner.querySelector('#lightboxCaption') : null;
+      if (inner && !captionEl) {
+        captionEl = document.createElement('p');
+        captionEl.id = 'lightboxCaption';
+        captionEl.className = 'caption';
+        inner.appendChild(captionEl);
+      }
+
+      // monta array de mídias (ignora wrappers sem mídia)
+      const media = wrappers.map(w => {
+        const img = w.querySelector('img');
+        const vid = w.querySelector('video');
+        const capEl = w.querySelector('.caption');
+        const cap = capEl ? capEl.textContent.trim() : (img ? img.alt : '');
+        if (img) return { type: 'img', src: img.src, caption: cap };
+        if (vid) {
+          const src = vid.getAttribute('src') || vid.currentSrc || '';
+          return { type: 'video', src: src, caption: cap };
+        }
+        return null;
+      }).filter(Boolean);
+
+      let currentIndex = 0;
+      let currentMediaEl = null;
+
+      function clearMedia() {
+        if (!currentMediaEl) return;
+        try {
+          if (currentMediaEl.tagName && currentMediaEl.tagName.toLowerCase() === 'video') {
+            currentMediaEl.pause();
+            currentMediaEl.removeAttribute('src');
+          }
+        } catch (e) { /* silencioso */ }
+        try { currentMediaEl.remove(); } catch(e) {}
+        currentMediaEl = null;
+      }
+
+      function show(index) {
+        if (!inner) return; // sem lightbox no DOM, apenas ignore a abertura
+        if (index < 0 || index >= media.length) return;
+        clearMedia();
+        currentIndex = index;
+        const m = media[currentIndex];
+        if (!m) return;
+        if (m.type === 'img') {
+          const el = document.createElement('img');
+          el.src = m.src;
+          el.alt = m.caption || '';
+          inner.insertBefore(el, captionEl);
+          currentMediaEl = el;
+        } else {
+          const v = document.createElement('video');
+          v.src = m.src;
+          v.controls = true;
+          v.autoplay = true;
+          v.playsInline = true;
+          v.preload = 'auto';
+          inner.insertBefore(v, captionEl);
+          currentMediaEl = v;
+          const p = v.play();
+          if (p && p.catch) p.catch(()=>{});
+        }
+        if (captionEl) captionEl.textContent = m.caption || '';
+        if (lightbox) {
+          lightbox.classList.add('active');
+          lightbox.setAttribute('aria-hidden', 'false');
+          const closeBtn = lightbox.querySelector('.close');
+          if (closeBtn) closeBtn.focus();
+        }
+      }
+
+      // adiciona listeners nos wrappers (sempre — mesmo que não exista lightbox)
+      wrappers.forEach((w, idx) => {
+        w.addEventListener('click', (ev) => {
+          ev.preventDefault();
+          // Se não houver lightbox, abre mídia em nova aba (fallback)
+          if (!inner) {
+            const img = w.querySelector('img');
+            const vid = w.querySelector('video');
+            const src = img ? img.src : (vid ? (vid.getAttribute('src') || vid.currentSrc) : null);
+            if (src) window.open(src, '_blank');
+            return;
+          }
+          show(idx);
+        });
+        w.addEventListener('keydown', (ev) => {
+          if (ev.key === 'Enter' || ev.key === ' ') {
+            ev.preventDefault();
+            if (!inner) {
+              const img = w.querySelector('img');
+              const vid = w.querySelector('video');
+              const src = img ? img.src : (vid ? (vid.getAttribute('src') || vid.currentSrc) : null);
+              if (src) window.open(src, '_blank');
+              return;
+            }
+            show(idx);
+          }
+        });
+      });
+
+      // botões e atalhos (só se existirem)
+      const closeBtn = lightbox ? lightbox.querySelector('.close') : null;
+      const prevBtn = lightbox ? lightbox.querySelector('.prev') : null;
+      const nextBtn = lightbox ? lightbox.querySelector('.next') : null;
+
+      function closeLB() {
+        if (!lightbox) return;
+        lightbox.classList.remove('active');
+        lightbox.setAttribute('aria-hidden', 'true');
+        clearMedia();
+        if (captionEl) captionEl.textContent = '';
+      }
+
+      if (closeBtn) closeBtn.addEventListener('click', closeLB);
+      if (closeBtn) closeBtn.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') closeLB(); });
+      if (lightbox) lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLB(); });
+      if (prevBtn) prevBtn.addEventListener('click', () => show((currentIndex - 1 + media.length) % media.length));
+      if (nextBtn) nextBtn.addEventListener('click', () => show((currentIndex + 1) % media.length));
+
+      document.addEventListener('keydown', (e) => {
+        if (!lightbox || !lightbox.classList.contains('active')) return;
+        if (e.key === 'Escape') return closeLB();
+        if (e.key === 'ArrowLeft') return prevBtn && prevBtn.click();
+        if (e.key === 'ArrowRight') return nextBtn && nextBtn.click();
+      });
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden && currentMediaEl && currentMediaEl.tagName === 'VIDEO') currentMediaEl.pause();
+      });
+
+    } catch (err) {
+      console.error('Erro inicializando lightbox (ignorado):', err);
+      // não faz nada além de logar — não deve impedir que a página apareça
+    }
+  })();
+});
+
+(function(){
+  // ids das suas <audio> — altera aqui só se seus ids forem diferentes
+  const ids = ['bgMusic1','bgMusic2','bgMusic3'];
+
+  // pega as faixas que existem na página
+  const tracks = ids.map(id => document.getElementById(id)).filter(Boolean);
+
+  if (!tracks.length) {
+    console.warn('Nenhuma faixa encontrada. Verifique os IDs:', ids);
+    return;
+  }
+
+  // configurações básicas
+  tracks.forEach(t => { t.preload = 'auto'; t.loop = false; /* t.muted = false; */ t.crossOrigin = 'anonymous'; });
+
+  let current = 0;
+  let started = false;
+
+  const playCurrent = () => {
+    const t = tracks[current];
+    if (!t) return Promise.reject('Faixa inexistente');
+    // pausamos as outras por segurança
+    tracks.forEach((tr, idx) => { if (idx !== current) try { tr.pause(); } catch(e){} });
+    return t.play();
+  };
+
+  const playNext = () => {
+    if (!tracks.length) return;
+    playCurrent().then(() => {
+      started = true;
+    }).catch(err => {
+      // autoplay bloqueado ou outro erro — silencioso no console
+      console.warn('Erro ao tentar play():', err);
+    });
+    // ao terminar, avança para a próxima
+    tracks[current].onended = () => {
+      current = (current + 1) % tracks.length;
+      playNext();
+    };
+  };
+
+  // função chamada na primeira interação do usuário
+  const startOnInteraction = (ev) => {
+    if (started) return removeListeners();
+    playNext();
+    removeListeners();
+  };
+
+  const removeListeners = () => {
+    ['click','keydown','touchstart'].forEach(evName => document.removeEventListener(evName, startOnInteraction));
+  };
+
+  // adiciona ouvintes para qualquer clique/tecla/toque
+  ['click','keydown','touchstart'].forEach(evName => document.addEventListener(evName, startOnInteraction, { passive: true }));
+
+  // tentativa de autoplay ao carregar (vai falhar na maioria dos navegadores sem interação,
+  // mas deixamos aqui como tentativa inicial)
+  window.addEventListener('load', () => {
+    playNext();
+    // se não iniciou depois de 1s, pausamos para evitar reprodução indesejada
+    setTimeout(() => {
+      if (!started) {
+        tracks.forEach(t => { try { t.pause(); } catch(e){} });
+        current = 0;
+      }
+    }, 1000);
+  });
+
+})();
+</script>
+
+
+</body>
+</html>
