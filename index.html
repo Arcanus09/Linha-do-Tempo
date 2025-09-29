@@ -863,7 +863,12 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   };
 
-  // função chamada na primeira interação do usuário
+  // expõe função global para caso algum script externo queira iniciar a playlist
+  window.startTimelinePlaylist = () => {
+    playNext();
+  };
+
+  // função chamada na primeira interação do usuário (click/tecla/toque)
   const startOnInteraction = (ev) => {
     if (started) return removeListeners();
     playNext();
@@ -877,9 +882,40 @@ document.addEventListener('DOMContentLoaded', () => {
   // adiciona ouvintes para qualquer clique/tecla/toque
   ['click','keydown','touchstart'].forEach(evName => document.addEventListener(evName, startOnInteraction, { passive: true }));
 
-  // tentativa de autoplay ao carregar (vai falhar na maioria dos navegadores sem interação,
-  // mas deixamos aqui como tentativa inicial)
+  // util: toast simples para mostrar o nome do match (opcional)
+  function showMatchToast(name) {
+    if (!name) return;
+    try {
+      const toast = document.createElement('div');
+      toast.style = 'position:fixed;left:50%;top:18%;transform:translateX(-50%);background:#fff;padding:12px 18px;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.16);z-index:9999;font-weight:700;';
+      toast.innerText = '✨ MATCH! ' + name;
+      document.body.appendChild(toast);
+      setTimeout(()=> { toast.style.transition='opacity .4s'; toast.style.opacity=0; setTimeout(()=>toast.remove(),400); }, 1400);
+    } catch(e) { /* silencioso */ }
+  }
+
+  // tentativa de autoplay ao carregar
+  // <-- aqui: se detectarmos lastMatch, removemos o flag e forçamos start() (pois o usuário já interagiu no Tinder)
   window.addEventListener('load', () => {
+    let lastMatchRaw = null;
+    try { lastMatchRaw = localStorage.getItem('lastMatch'); } catch(e){ lastMatchRaw = null; }
+
+    if (lastMatchRaw) {
+      // limpa a flag para evitar repetições em reloads
+      try { localStorage.removeItem('lastMatch'); } catch(e){}
+
+      // tenta extrair nome e mostrar toast (opcional)
+      try {
+        const parsed = JSON.parse(lastMatchRaw);
+        if (parsed && parsed.name) showMatchToast(parsed.name);
+      } catch(e){}
+
+      // inicia a playlist imediatamente (se o browser permitir — normalmente funciona porque houve interação no Tinder)
+      playNext();
+      return;
+    }
+
+    // comportamento padrão: tenta autoplay uma vez (provavelmente será bloqueado)
     playNext();
     // se não iniciou depois de 1s, pausamos para evitar reprodução indesejada
     setTimeout(() => {
@@ -891,9 +927,43 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 })();
+  (function(){
+  // função que grava o match e redireciona
+  function onMatchHappened(matchUser) {
+    try {
+      localStorage.setItem('lastMatch', JSON.stringify({
+        name: matchUser && matchUser.name ? matchUser.name : null,
+        ts: Date.now()
+      }));
+    } catch (e) { console.warn('localStorage indisponível:', e); }
+
+    // redireciona para a Linha do Tempo pública
+    window.location.href = 'https://arcanus09.github.io/Linha-do-Tempo/';
+  }
+
+  // tenta ligar ao botão "yes" se existir (procura por id/class/genérico)
+  const btnYes = document.getElementById('btnYes') || document.querySelector('.btnYes') || document.querySelector('[data-btn="yes"]');
+  const overlayMatch = document.querySelector('.overlay-match') || document.getElementById('overlayMatch') || null;
+
+  if (btnYes) {
+    // substitui listener: mostra overlay (se tiver) e chama onMatchHappened após animação
+    btnYes.addEventListener('click', () => {
+      if (overlayMatch) overlayMatch.classList.add('active');
+      // espera a animação do overlay (ajuste tempo se necessário)
+      setTimeout(() => {
+        onMatchHappened({ name: 'Gabriel' }); // substitua 'Gabriel' dinamicamente se tiver a variável do match
+      }, 600);
+    });
+  } else {
+    // se não encontramos o botão, deixamos a função global para ser chamada pelo seu fluxo existente
+    window.onMatchHappened = onMatchHappened;
+    console.warn('btnYes não encontrado automaticamente — use window.onMatchHappened({name: "Nome"}) quando ocorrer o match.');
+  }
+})();
 </script>
 
 
 </body>
 
 </html>
+
