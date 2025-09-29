@@ -882,18 +882,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // adiciona ouvintes para qualquer clique/tecla/toque
   ['click','keydown','touchstart'].forEach(evName => document.addEventListener(evName, startOnInteraction, { passive: true }));
 
-  // util: toast simples para mostrar o nome do match (opcional)
-  function showMatchToast(name) {
-    if (!name) return;
-    try {
-      const toast = document.createElement('div');
-      toast.style = 'position:fixed;left:50%;top:18%;transform:translateX(-50%);background:#fff;padding:12px 18px;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.16);z-index:9999;font-weight:700;';
-      toast.innerText = '✨ MATCH! ' + name;
-      document.body.appendChild(toast);
-      setTimeout(()=> { toast.style.transition='opacity .4s'; toast.style.opacity=0; setTimeout(()=>toast.remove(),400); }, 1400);
-    } catch(e) { /* silencioso */ }
-  }
-
   // tentativa de autoplay ao carregar
   // <-- aqui: se detectarmos lastMatch, removemos o flag e forçamos start() (pois o usuário já interagiu no Tinder)
   window.addEventListener('load', () => {
@@ -1002,6 +990,7 @@ document.addEventListener('DOMContentLoaded', () => {
 </body>
 
 </html>
+
 
 
 
