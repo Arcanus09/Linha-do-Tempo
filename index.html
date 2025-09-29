@@ -948,48 +948,15 @@ document.addEventListener('DOMContentLoaded', () => {
     console.warn('btnYes não encontrado automaticamente — use window.onMatchHappened({name: "Nome"}) quando ocorrer o match.');
   }
 })();
-  // 1) Impede que qualquer função showMatchToast criada antes tenha efeito,
-  //    sobrescrevendo-a globalmente (depois que o IIFE original rodou).
-  window.showMatchToast = function() { /* no-op */ };
 
-  // 2) Remove imediatamente qualquer elemento que tenha sido inserido visualmente
-  //    pelo toast (caixa branca) — tolerante: remove por texto/emoji ou por classe.
-  document.addEventListener('DOMContentLoaded', () => {
-    try {
-      // tenta remover elementos típicos do toast
-      const possible = Array.from(document.querySelectorAll('div,span'));
-      possible.forEach(el => {
-        const txt = (el.textContent || '').trim();
-        // se for exatamente '✨ MATCH' / 'MATCH' / "It's a Match!" — remove
-        if (/match/i.test(txt) || txt.includes('✨')) {
-          // evitamos remover conteúdo legítimo do timeline, só removemos se o elemento
-          // for pequeno (provável toast) e estiver em posição fixa / com z-index alto
-          const style = window.getComputedStyle(el);
-          const isFixed = style.position === 'fixed' || style.position === 'absolute';
-          const z = parseInt(style.zIndex || '0', 10);
-          const area = (el.offsetWidth * el.offsetHeight) || 0;
-          if (isFixed || z >= 900 || area < 100000) {
-            el.remove();
-          }
-        }
-      });
-    } catch (e) { /* silencioso */ }
-  });
-
-  // 3) Caso algum outro script ainda tente chamar showMatchToast depois,
-  //    garantimos no runtime que não mostre nada substituindo novamente.
-  (function guard() {
-    const orig = window.showMatchToast;
-    window.showMatchToast = function() { /* no-op */ };
-    // re-apply after pequeno delay (protege contra re-declarações assincronas)
-    setTimeout(() => { window.showMatchToast = function() {}; }, 300);
-  })();
+  
 </script>
 
 
 </body>
 
 </html>
+
 
 
 
