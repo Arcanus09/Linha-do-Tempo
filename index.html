@@ -876,7 +876,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   })();
 });
-/* ---------- SUBSTITUIR IIFE DE ÁUDIO POR ESTA ---------- */
+/* ---------- IIFE DE ÁUDIO SUBSTITUTA (cole no lugar da atual) ---------- */
 (function(){
   const ids = ['bgMusic1','bgMusic2','bgMusic3'];
   const tracks = ids.map(id => document.getElementById(id)).filter(Boolean);
@@ -888,15 +888,12 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
-  // pega URLs das fontes (fallback para <source>)
+  // pega urls das fontes (tenta multiple estratégias)
   const trackSrcs = tracks.map(t => {
     try {
-      // tenta pegar src direto no elemento <audio>
       if (t.currentSrc) return t.currentSrc;
-      // senão procura <source>
       const s = t.querySelector('source');
       if (s && s.src) return s.src;
-      // senão attr src
       const attr = t.getAttribute('src');
       if (attr) return attr;
     } catch(e){}
@@ -905,137 +902,127 @@ document.addEventListener('DOMContentLoaded', () => {
 
   console.log('[audio] urls obtidas:', trackSrcs);
 
-  // prepara elementos: preload e crossOrigin
-  tracks.forEach(t => {
-    try { t.preload = 'auto'; t.crossOrigin = 'anonymous'; t.loop = false; } catch(e){}
-  });
-
   let started = false;
 
-  function tryPlayAudioElement(el) {
+  // função simples para tocar um elemento e aguardar ended
+  function playAndWaitElement(el) {
     return new Promise((resolve, reject) => {
-      if (!el) return reject('elemento inexistente');
-      const p = el.play();
-      if (!p) {
-        // alguns browsers retornam undefined — resolvemos esperar um pouco e resolver
-        console.warn('[audio] .play() retornou undefined (pode ainda tocar).');
-        // considera-se sucesso presumido — resolve para seguir
-        return resolve();
+      if (!el) return reject('elemento ausente');
+      // garantir reset
+      try { el.currentTime = 0; } catch(e){}
+      const playPromise = el.play();
+      if (playPromise && playPromise.then) {
+        playPromise.then(() => {
+          // espera ended
+          el.addEventListener('ended', function onEnd(){ el.removeEventListener('ended', onEnd); resolve(); });
+        }).catch(err => reject(err));
+      } else {
+        // se não houver promessa, assume que começou e aguarda ended
+        el.addEventListener('ended', function onEnd(){ el.removeEventListener('ended', onEnd); resolve(); });
+        // e dá um timeout de segurança caso 'ended' não venha (5 minutos)
+        setTimeout(() => resolve(), 1000 * 60 * 5);
       }
-      p.then(() => {
-        console.log('[audio] play() aceito para elemento.', el);
-        resolve();
-      }).catch(err => {
-        console.warn('[audio] play() rejeitado para elemento:', err);
-        reject(err);
-      });
     });
   }
 
-  // fallback: cria Audio() novo com a mesma src e tenta tocar
-  function tryPlayNewAudio(src) {
+  // fallback: cria Audio novo e aguarda ended
+  function playAndWaitNewAudio(src) {
     return new Promise((resolve, reject) => {
-      if (!src) return reject('sem src');
+      if (!src) return reject('sem src para fallback');
       try {
-        const a = new Audio();
-        a.src = src;
+        const a = new Audio(src);
         a.preload = 'auto';
         a.crossOrigin = 'anonymous';
-        // importante: tocar só depois do load/start (mas vamos tentar direto)
         const p = a.play();
-        if (!p) {
-          // alguns ambientes aceitam sem Promise
-          console.log('[audio fallback] play() sem promessa, assumindo que começou.', src);
-          return resolve(a);
+        if (p && p.then) {
+          p.then(() => {
+            a.addEventListener('ended', function onEnd(){ a.removeEventListener('ended', onEnd); resolve(); });
+          }).catch(err => reject(err));
+        } else {
+          a.addEventListener('ended', function onEnd(){ a.removeEventListener('ended', onEnd); resolve(); });
+          setTimeout(()=>resolve(), 1000 * 60 * 5);
         }
-        p.then(() => {
-          console.log('[audio fallback] fallback Audio.play() OK para', src);
-          resolve(a);
-        }).catch(err => {
-          console.warn('[audio fallback] fallback falhou para', src, err);
-          reject(err);
-        });
       } catch (e) {
         reject(e);
       }
     });
   }
 
-  // aguarda "ended" de elemento <audio> (ou do fallback Audio)
-  function waitForEnd(audioEl) {
-    return new Promise(resolve => {
-      if (!audioEl) return resolve();
-      if (audioEl.ended) return resolve();
-      const onEnd = () => {
-        audioEl.removeEventListener('ended', onEnd);
-        resolve();
-      };
-      audioEl.addEventListener('ended', onEnd);
-      // como segurança: se for um fallback com duração indefinida, não deixamos pendente demais.
-    });
-  }
-
-  async function playSequenceFrom(index = 0) {
-    console.log('[audio] iniciando sequência a partir de', index);
-    // pausa tudo antes
-    tracks.forEach(t => { try { t.pause(); t.currentTime = 0; } catch(e){} });
-
-    for (let i = index; i < tracks.length; i++) {
-      const t = tracks[i];
+  // sequência robusta que será disparada **dentro** do evento de interação do usuário
+  async function playSequenceFromIndex(startIndex = 0) {
+    for (let i = startIndex; i < trackSrcs.length; i++) {
       const src = trackSrcs[i];
-      console.log(`[audio] tentando tocar faixa ${i} — src:`, src);
-
-      // tenta tocar o elemento <audio>
-      try {
-        try { t.load(); } catch(e){}
-        await tryPlayAudioElement(t);
-        console.log('[audio] está tocando elemento <audio> index', i);
-        await waitForEnd(t);
-        console.log('[audio] faixa', i, 'terminou (elemento <audio>)');
-        continue; // segue para próxima
-      } catch (err) {
-        console.warn('[audio] não foi possível tocar o elemento <audio>, tentando fallback (new Audio).', err);
-        // tenta fallback com new Audio(src)
+      const el = tracks[i];
+      console.log('[audio] tocando índice', i, 'src=', src, 'el=', !!el);
+      // tenta tocar o elemento <audio> do DOM (melhor caso)
+      if (el) {
         try {
-          const fallback = await tryPlayNewAudio(src);
-          // espera o ended do fallback
-          await waitForEnd(fallback);
-          console.log('[audio] fallback terminou para faixa', i);
-          // continua
+          await playAndWaitElement(el);
+          console.log('[audio] terminou elemento DOM idx', i);
           continue;
-        } catch (err2) {
-          console.error('[audio] fallback também falhou para faixa', i, err2);
-          // espera um curto delay e segue para próxima faixa
-          await new Promise(r => setTimeout(r, 600));
+        } catch (errEl) {
+          console.warn('[audio] erro tocando elemento DOM, tentando fallback new Audio:', errEl);
+          // tentativa de fallback com new Audio(src)
+          try {
+            await playAndWaitNewAudio(src);
+            console.log('[audio] fallback new Audio terminou idx', i);
+            continue;
+          } catch (errFb) {
+            console.error('[audio] fallback também falhou para idx', i, errFb);
+            // segue para próxima faixa
+            continue;
+          }
+        }
+      } else {
+        // se não tem elemento <audio>, tenta diretamente new Audio
+        try {
+          await playAndWaitNewAudio(src);
+          console.log('[audio] new Audio terminou idx', i);
+          continue;
+        } catch (err) {
+          console.error('[audio] new Audio falhou idx', i, err);
           continue;
         }
       }
     }
-
-    console.log('[audio] sequência finalizada ou terminou o loop.');
+    console.log('[audio] sequência finalizada.');
   }
 
-  // ouvinte de primeira interação
+  // listener de primeira interação — chamará a sequência *diretamente*
   function onFirstInteraction(ev) {
     if (started) return;
     started = true;
-    // remove ouvintes
-    ['click','touchstart','keydown'].forEach(evName => document.removeEventListener(evName, onFirstInteraction, { passive: true }));
-    console.log('[audio] interação detectada — iniciando sequência');
-    // inicia a sequência (começa pela primeira faixa — ajuste se quiser startIndex diferente)
-    playSequenceFrom(0).catch(e => console.error('[audio] erro na playSequenceFrom:', e));
+    // remover listeners
+    ['click','touchstart','keydown'].forEach(evName => document.removeEventListener(evName, onFirstInteraction));
+    console.log('[audio] interação detectada — iniciando sequência (user gesture)');
+
+    // TENTATIVA 1: tocar imediatamente o primeiro elemento DOM para maximizar compatibilidade
+    (async function(){
+      try {
+        if (tracks[0]) {
+          // tentar tocar o <audio> diretamente no mesmo fluxo de evento
+          await playAndWaitElement(tracks[0]);
+          // depois tocar o restante usando a mesma rotina (a partir do índice 1)
+          await playSequenceFromIndex(1);
+        } else {
+          // se não houver <audio>, inicia do 0 com fallback
+          await playSequenceFromIndex(0);
+        }
+      } catch (err) {
+        console.warn('[audio] erro na tentativa direta, caindo para playSequenceFromIndex como fallback:', err);
+        try { await playSequenceFromIndex(0); } catch(e){ console.error('[audio] erro final na sequência', e); }
+      }
+    })();
   }
 
-  // registra ouvintes (passive true para não interferir em scroll)
-  ['click','touchstart','keydown'].forEach(evName => document.addEventListener(evName, onFirstInteraction, { passive: true }));
+  // Registrar ouvintes — SEM passive:true para garantir reconhecimento de gesto
+  ['click','touchstart','keydown'].forEach(evName => document.addEventListener(evName, onFirstInteraction, false));
 
-  // expõe manual trigger
+  // exposições para debug
   window.startTimelinePlaylist = () => { if (!started) onFirstInteraction(); };
 
-  // dica: log de instrução para o console
-  console.log('[audio] pronto — clique em qualquer lugar na página (ou chame window.startTimelinePlaylist()) para tocar as músicas em sequência.');
+  console.log('[audio] pronto — toque/clique na página para iniciar as músicas. Se não tocar, abra DevTools -> Console/Network para ver erros.');
 })();
-/* ---------- FIM: IIFE SUBSTITUTA ---------- */
   (function(){
   // função que grava o match e redireciona
   function onMatchHappened(matchUser) {
@@ -1077,5 +1064,3 @@ document.addEventListener('DOMContentLoaded', () => {
 </body>
 
 </html>
-
-
