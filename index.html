@@ -722,6 +722,12 @@ Porque esta não é apenas uma linha do tempo, é a prova viva de que o destino 
 <audio id="bgMusic3">
   <source src="https://www.dropbox.com/scl/fi/d94ptndqvs2g0yro4fnnb/WhatsApp-Audio-2025-09-27-at-12.28.19.mpeg?rlkey=gwpn9e7shvl5rltw30709w41e&raw=1" type="audio/mpeg">
 </audio>
+  
+<!-- Música de fundo 4 -->
+<audio id="bgMusic4">
+  <source src="https://www.dropbox.com/scl/fi/ps8nc3l7rfeikvbjzu02l/spotifydown.com-Never-Be-the-Same-1.mp3?rlkey=yhz2a9od1nc9rw3t8ixurzol2&raw=1" type="audio/mpeg">
+</audio>
+  
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -882,7 +888,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 /* ---------- IIFE DE ÁUDIO SUBSTITUTA (cole no lugar da atual) ---------- */
 (function(){
-  const ids = ['bgMusic1','bgMusic2','bgMusic3'];
+  const ids = ['bgMusic1','bgMusic2','bgMusic3','bgMusic4'];
   const tracks = ids.map(id => document.getElementById(id)).filter(Boolean);
 
   console.log('[audio] encontradas faixas:', tracks.length, ids);
@@ -1068,4 +1074,5 @@ document.addEventListener('DOMContentLoaded', () => {
 </body>
 
 </html>
+
 
